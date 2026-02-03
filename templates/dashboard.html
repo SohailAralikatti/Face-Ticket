@@ -1,0 +1,56 @@
+<!-- dashboard.html - Styled Version -->
+{% extends "layout.html" %}
+{% block content %}
+<h3 class="text-center text-light mb-5">📊 Admin Dashboard</h3>
+
+<div class="row g-4">
+  <div class="col-md-4">
+    <div class="card text-center card-custom p-4">
+      <h5 class="card-title">👨‍🎓 Manage Students</h5>
+      <p class="card-text">View, update, or delete student records.</p>
+      <a href="/students" class="btn btn-gradient">View Students</a>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card text-center card-custom p-4">
+      <h5 class="card-title">📝 Register New Student</h5>
+      <p class="card-text">Enroll a new student with face data.</p>
+      <a href="/register" class="btn btn-gradient">Register</a>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card text-center card-custom p-4">
+      <h5 class="card-title">📚 Attendance</h5>
+      <p class="card-text">View and manage attendance logs.</p>
+      <a href="/attendance" class="btn btn-gradient">View Attendance</a>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card text-center card-custom p-4">
+      <h5 class="card-title">🚨 Fraud Records</h5>
+      <p class="card-text">Review flagged unauthorized entries.</p>
+      <a href="/fraud" class="btn btn-gradient">View Fraud</a>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card text-center card-custom p-4">
+      <h5 class="card-title">🔁 Train Model</h5>
+      <p class="card-text">Update the face recognition model.</p>
+      <a href="/train" class="btn btn-gradient">Train Now</a>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card text-center card-custom p-4">
+      <h5 class="card-title">🚪 Logout</h5>
+      <p class="card-text">Exit admin session.</p>
+      <a href="/logout" class="btn btn-secondary">Logout</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Student</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h3>Edit Student Details</h3>
+    <form method="POST" class="card p-4 shadow">
+        <label>Name</label>
+        <input name="name" class="form-control mb-2" value="{{ student.name }}" required>
+
+        <label>USN</label>
+        <input name="usn" class="form-control mb-2" value="{{ student.usn }}" required>
+
+        <label>Branch</label>
+        <input name="branch" class="form-control mb-2" value="{{ student.branch }}" required>
+
+        <label>Semester</label>
+        <input name="semester" class="form-control mb-2" value="{{ student.semester }}" required>
+
+        <label>Hallticket</label>
+        <input name="hallticket" class="form-control mb-2" value="{{ student.hallticket }}" required>
+
+        <label>Block</label>
+        <select name="block" class="form-select mb-3" required>
+            <option value="">-- Select Block --</option>
+            <option value="A1" {% if student.block == 'A1' %}selected{% endif %}>A1</option>
+            <option value="A2" {% if student.block == 'A2' %}selected{% endif %}>A2</option>
+            <option value="A3" {% if student.block == 'A3' %}selected{% endif %}>A3</option>
+            <option value="A4" {% if student.block == 'A4' %}selected{% endif %}>A4</option>
+        </select>
+
+        <button class="btn btn-success">Save</button>
+        <a href="/students" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+</body>
+</html>
+

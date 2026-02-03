@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block content %}
+<h3 class="mb-4 text-center text-light">👨‍🎓 Registered Students</h3>
+
+<div class="table-responsive">
+  <table class="table table-hover table-bordered">
+    <thead class="table-dark">
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>USN</th>
+        <th>Branch</th>
+        <th>Semester</th>
+        <th>Hall Ticket</th>
+        <th>Block</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for student in students %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ student.name }}</td>
+        <td>{{ student.usn }}</td>
+        <td>{{ student.branch }}</td>
+        <td>{{ student.semester }}</td>
+        <td>{{ student.hallticket }}</td>
+        <td>{{ student.block }}</td>
+        <td>
+          <a href="/edit_student/{{ student.id }}" class="btn btn-sm btn-primary">Edit</a>
+          <a href="/delete_student/{{ student.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this student?')">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="text-center mt-4">
+  <a href="/dashboard" class="btn btn-secondary">← Back to Dashboard</a>
+</div>
+{% endblock %}
+

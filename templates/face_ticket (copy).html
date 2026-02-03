@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🎟️ Face Ticket</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #5f0eff, #7300e6);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+
+        h2 {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        video {
+            border-radius: 12px;
+            border: 4px solid white;
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+        }
+
+        #student-info {
+            background: white;
+            color: #333;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .alert {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .map-container img {
+            border: 3px solid #5f0eff;
+            border-radius: 10px;
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 class="text-center mb-5">🎟️ Face Ticket Authentication</h2>
+    <div class="row g-4">
+        <div class="col-lg-6 text-center">
+            <video id="video" autoplay muted playsinline width="100%" height="auto"></video>
+        </div>
+        <div class="col-lg-6">
+            <div id="student-info" class="text-center">
+                <div class="alert alert-info">
+                    <h5>📸 Please face the camera for verification</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let lastStatus = 'waiting';
+    let timeoutHandle = null;
+    function speakText(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 1;
+    window.speechSynthesis.cancel(); // Stop any ongoing speech
+    window.speechSynthesis.speak(utterance);
+}
+
+    function resetStudentInfo() {
+        const infoBox = document.getElementById('student-info');
+        infoBox.innerHTML = `
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Waiting for face...</span>
+            </div>`;
+        lastStatus = 'waiting';
+    }
+
+    function displayStudent(data) {
+    const infoBox = document.getElementById('student-info');
+    const blockText = data.block ? data.block.toUpperCase() : 'Unknown';
+    const mapImagePath = `/static/maps/${blockText}.jpg`;
+
+    infoBox.innerHTML = `
+        <div class="alert alert-success">
+            <h4>✅ Recognized</h4>
+            <p><strong>Name:</strong> ${data.name}</p>
+            <p><strong>USN:</strong> ${data.usn}</p>
+            <p><strong>Hall Ticket:</strong> ${data.hallticket}</p>
+            <p><strong>Block:</strong> ${blockText}</p>
+        </div>
+        <div class="alert alert-info fw-semibold">
+            🏫 Exam at <span class="text-primary">Block ${blockText}</span>
+        </div>
+        <div class="map-container mt-3">
+            <img src="${mapImagePath}" alt="Map of Block ${blockText}" class="img-fluid">
+        </div>`;
+
+    speakText("Valid student. Your Attendance is marked. Please proceed to the block shown.");
+
+    lastStatus = 'recognized';
+    if (timeoutHandle) clearTimeout(timeoutHandle);
+    timeoutHandle = setTimeout(resetStudentInfo, 8000);
+}
+function displayFraud() {
+    const infoBox = document.getElementById('student-info');
+    infoBox.innerHTML = `
+        <div class="alert alert-danger">
+            <h4>❌ Unauthorized</h4>
+            <p>Face not recognized. Logged as fraud.</p>
+        </div>`;
+
+    speakText("Unauthorized. Please contact the Exams Administator.");
+
+    lastStatus = 'unauthorized';
+    if (timeoutHandle) clearTimeout(timeoutHandle);
+    timeoutHandle = setTimeout(resetStudentInfo, 8000);
+}
+
+    function startWebcam() {
+        const video = document.getElementById('video');
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(err => console.error("❌ Webcam error:", err));
+    }
+
+    function pollFrame() {
+        const video = document.getElementById('video');
+        if (!video || video.readyState !== 4) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(blob => {
+            if (!blob) return;
+            const formData = new FormData();
+            formData.append('frame', blob);
+
+            fetch('/process_face', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log("📦 Server response:", data.status);
+
+                if (data.status === 'recognized' && lastStatus !== 'recognized') {
+                    displayStudent(data);
+                } else if (data.status === 'unauthorized' && lastStatus !== 'unauthorized') {
+                    displayFraud();
+                }
+                // else keep showing spinner
+            })
+            .catch(err => {
+                console.error("❌ Fetch error:", err);
+            });
+        }, 'image/jpeg');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        startWebcam();
+        resetStudentInfo();
+        setInterval(pollFrame, 1000); // Capture frame every second
+    });
+</script>
+
+</body>
+</html>
+

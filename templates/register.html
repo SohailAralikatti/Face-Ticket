@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register Student</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #5f0eff, #7300e6);
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+    }
+    .card-custom {
+      background: white;
+      color: #333;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    }
+    h2 {
+      color: #fff;
+      font-weight: 600;
+    }
+    .form-label {
+      font-weight: 500;
+    }
+    .btn-success {
+      background: linear-gradient(to right, #00b09b, #96c93d);
+      border: none;
+    }
+    .btn-primary {
+      background: linear-gradient(to right, #36d1dc, #5b86e5);
+      border: none;
+    }
+    .btn-secondary {
+      background-color: #555;
+      border: none;
+    }
+    #video-stream {
+      border: 4px solid #fff;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+      width: 100%;
+      max-height: 350px;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container py-5">
+  <h2 class="text-center mb-4">📝 Register Student</h2>
+
+  <form method="POST" enctype="multipart/form-data" id="studentForm" class="card p-4 shadow card-custom">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Name</label>
+        <input type="text" name="name" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">USN</label>
+        <input type="text" name="usn" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Branch</label>
+        <input type="text" name="branch" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Semester</label>
+        <input type="text" name="semester" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Hall Ticket No</label>
+        <input type="text" name="hallticket" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Block</label>
+        <select name="block" class="form-select" required>
+          <option value="">-- Select Block --</option>
+          <option value="A1">A1</option>
+          <option value="A2">A2</option>
+          <option value="A3">A3</option>
+          <option value="A4">A4</option>
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Live Camera Stream</label>
+        <img id="video-stream" src="{{ url_for('video_feed') }}">
+        <div class="mt-2 text-center">
+          <button type="button" class="btn btn-primary" onclick="startAutoCapture()">📸 Start Capturing 30 Face Images</button>
+          <p id="capture-status" class="mt-2 text-primary"></p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="mt-4 text-center">
+      <button type="submit" class="btn btn-success" disabled>Register</button>
+      <a href="/dashboard" class="btn btn-secondary ms-2">Back</a>
+    </div>
+  </form>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="toast text-bg-{{ 'success' if category == 'success' else 'danger' }}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000" data-bs-autohide="true">
+          <div class="d-flex">
+            <div class="toast-body">{{ message }}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let captureCount = 0;
+let captureInterval;
+
+function validateFormState() {
+    const form = document.getElementById('studentForm');
+    const inputs = form.querySelectorAll('input[required], select[required]');
+    const allFilled = Array.from(inputs).every(input => input.value.trim() !== '');
+    const registerBtn = form.querySelector('button[type="submit"]');
+    registerBtn.disabled = !(captureCount >= 30 && allFilled);
+}
+
+function startAutoCapture() {
+    captureCount = 0;
+    document.getElementById('capture-status').innerHTML = "⏳ Capturing started...";
+    captureInterval = setInterval(() => captureAndSendFrame(), 300);
+}
+
+function captureAndSendFrame() {
+    const formData = new FormData();
+    formData.append('name', document.querySelector('[name="name"]').value);
+    formData.append('usn', document.querySelector('[name="usn"]').value);
+
+    fetch('/capture_frame', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(res => {
+        const status = document.getElementById('capture-status');
+        if (res.status === 'success') {
+            captureCount++;
+            status.innerText = `✅ Captured ${captureCount}/30 valid images`;
+            validateFormState();
+        } else {
+            status.innerText = `⚠️ No face found... (${captureCount}/30)`;
+        }
+
+        if (captureCount >= 30) {
+            clearInterval(captureInterval);
+            status.innerText = "✅ 30 images captured successfully!";
+            validateFormState();
+        }
+    })
+    .catch(err => {
+        clearInterval(captureInterval);
+        showToast("❌ Capture failed. See console.", "danger");
+        console.error(err);
+    });
+}
+
+function showToast(message, type) {
+    const container = document.querySelector('.toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast text-bg-${type}`;
+    toast.setAttribute("role", "alert");
+    toast.setAttribute("data-bs-delay", "5000");
+    toast.setAttribute("data-bs-autohide", "true");
+
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+    container.appendChild(toast);
+    new bootstrap.Toast(toast).show();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('#studentForm input, #studentForm select').forEach(el => {
+        el.addEventListener('input', validateFormState);
+    });
+});
+</script>
+
+</body>
+</html>
+
