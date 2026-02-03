@@ -116,7 +116,7 @@ Face-Ticket
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/SohailAralikatti/Face-Ticket.git
 
 
 2. Navigate to the project directory:
